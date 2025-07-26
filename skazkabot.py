@@ -5,7 +5,6 @@ import pyautogui
 import time
 
 
-
 class Hero:
     def __init__(self, name, image, priority, element=None):
         self.name = name
@@ -30,7 +29,7 @@ heroes = [
     Hero('Руслан', 'ruslan.png', 3, ('physical',)),
     Hero('Василиса', 'vasilisa.png', 2, ('physical','fire')),
     Hero('Яга', 'yaga.png', 2, ('fire',)),
-    Hero('Жар-птица', 'phoenix.png', 2, ('fire',)),
+    Hero('Жар-птица', 'phoenix.png', 2, ('fire','physical')),
     Hero('София', 'sofia.png', 3, ('water',)),
     Hero('Мухолов', 'flycatcher.png', 3, ('earth',)),
     ]
@@ -49,7 +48,7 @@ def find_image_on_screen(template_path, threshold=0.8):
     return None
 
 
-def find_runes(template_path, threshold=0.95):
+def find_runes(template_path, threshold=0.94):
     screenshot = pyautogui.screenshot()
     screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
     template = cv2.imread(template_path)
@@ -128,6 +127,8 @@ def battle(attacker):
                         pyautogui.moveTo(rune[0], rune[1])
                         pyautogui.click()
                         time.sleep(1)
+                if round == 0:
+                    break
             if not found_any:
                 print(f'Руны {attacker.element} не найдены')
     time.sleep(10)
@@ -135,23 +136,23 @@ def battle(attacker):
     pos = find_image_on_screen("img/victory.png")
     return pos
 
-if __name__ == "__main__":
+def play(n_attack=10):
     # Ищем кнопку Игра
     pos = click_on_picture("img/play.png")
     if pos:
-        time.sleep(3)
-        pyautogui.moveTo(pos[0]+185, pos[1]-71)
-        pyautogui.click()
-        time.sleep(1)
-        pyautogui.moveTo(pos[0]+185, pos[1]-71)
-        pyautogui.click()
-        time.sleep(1)
-    for i in range(5):    
-        # Ищем Гарвену
+       time.sleep(3)
+       pyautogui.moveTo(pos[0]-131, pos[1]+10)
+       pyautogui.click()
+       time.sleep(1)
+       pyautogui.moveTo(pos[0]-131, pos[1]+10)
+       pyautogui.click()
+       time.sleep(1)
+    for i in range(n_attack):    
+        # Ищем босса для фарма
         pos = click_on_picture("img/garvena.png")
         time.sleep(2)
         if not pos:
-            print('Гарвена не найдена')
+            print('Босс не найден')
         
         # Жмем кнопку В бой
         pos = click_on_picture("img/attack.png")
@@ -180,3 +181,35 @@ if __name__ == "__main__":
                 print("Следующий тур.")
         pos = click_on_picture("img/loot.png")
         time.sleep(2)
+
+
+if __name__ == "__main__":
+    play(15)
+    # for i in range(6):
+    #     # Жмем кнопку призвать
+    #     pos = click_on_picture("img/summon.png")
+    #     time.sleep(3)
+        
+    #     # Бой
+    #     in_battle = True
+    #     while in_battle:
+    #         print("Начинаем бой")
+    #         attacker = select_hero(list_of_heroes())
+    #         print(f"Атакующий: {attacker}")
+    #         if not attacker:
+    #             print("Нет доступных героев для атаки")
+    #             break
+    #         if attacker:
+    #             pos = click_on_picture(f"img/{attacker.image}")
+    #             time.sleep(2)
+    #         else:
+    #             print('Шаблон атакующего не найден')
+    #             break
+    #         pos = battle(attacker)
+    #         if pos:
+    #             print("Бой завершен, победа!") 
+    #             in_battle = False
+    #         else:
+    #             print("Следующий тур.")
+    #     pos = click_on_picture("img/loot.png")
+    #     time.sleep(2)
