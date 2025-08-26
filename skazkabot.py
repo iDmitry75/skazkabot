@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pyautogui
 import time
+import sys
 
 
 class Hero:
@@ -30,9 +31,11 @@ heroes = [
     Hero('Василиса', 'vasilisa.png', 2, ('physical','fire')),
     Hero('Яга', 'yaga.png', 2, ('fire',)),
     Hero('Жар-птица', 'phoenix.png', 2, ('fire','physical')),
-    Hero('София', 'sofia.png', 3, ('water',)),
+    Hero('София', 'sofia.png', 4, ('water',)),
     Hero('Мухолов', 'flycatcher.png', 3, ('earth',)),
-    ]
+    Hero('Древень', 'dreven.png', 3, ('earth','physical')),
+    Hero('Ледогрыз', 'icecracker.png', 2, ('water',))
+]
 
 
 def find_image_on_screen(template_path, threshold=0.8):
@@ -137,7 +140,25 @@ def battle(attacker):
     return pos
 
 def play(n_attack=10):
+    """
+    Выполняет серию боёв в игровом режиме "Игра".
+
+    Аргументы:
+        n_attack (int): Количество атак (боёв), которые нужно провести в режиме "Игра".
+
+    Описание:
+        - Переходит в раздел "Игра" в интерфейсе.
+        - Для каждой атаки:
+            - Находит и выбирает босса для фарма.
+            - Жмёт кнопку "В бой".
+            - Выбирает доступного героя с наивысшим приоритетом.
+            - Проводит бой с выбранным героем, используя руны его элементов.
+            - После победы собирает награду.
+        - Все действия автоматизированы с помощью поиска и кликов по изображениям на экране.
+    """
     # Ищем кнопку Игра
+    print("Переходим в игру (если есть)")
+    print("Количество атак:", n_attack)
     pos = click_on_picture("img/play.png")
     if pos:
        time.sleep(3)
@@ -182,34 +203,138 @@ def play(n_attack=10):
         pos = click_on_picture("img/loot.png")
         time.sleep(2)
 
+def event(n_attack=1):
+    """
+    Выполняет серию боёв в игровом событии.
+
+    Аргументы:
+        n_attack (int): Количество атак (боёв), которые нужно провести в событии.
+
+    Описание:
+        - Переходит в раздел "Событие" игры.
+        - Для каждой атаки:
+            - Нажимает кнопку "Призвать".
+            - Выбирает доступного героя с наивысшим приоритетом.
+            - Проводит бой с выбранным героем, используя руны его элементов.
+            - После победы собирает награду.
+        - Все действия автоматизированы с помощью поиска и кликов по изображениям на экране.
+    """
+    # Ищем кнопку Событие
+    print("Переходим в событие  (если есть)")
+    print("Количество атак:", n_attack)
+    pos = click_on_picture("img/event.png")
+    if pos:
+       time.sleep(3)
+       pyautogui.moveTo(pos[0]-12, pos[1]-179)
+       pyautogui.click()
+       time.sleep(3)
+    for i in range(n_attack):
+        # Жмем кнопку призвать
+        pos = click_on_picture("img/summon.png")
+        time.sleep(3)
+        # Бой
+        in_battle = True
+        while in_battle:
+            print("Начинаем бой")
+            attacker = select_hero(list_of_heroes())
+            print(f"Атакующий: {attacker}")
+            if not attacker:
+                print("Нет доступных героев для атаки")
+                break
+            if attacker:
+                pos = click_on_picture(f"img/{attacker.image}")
+                time.sleep(2)
+            else:
+                print('Шаблон атакующего не найден')
+                break
+            pos = battle(attacker)
+            if pos:
+                print("Бой завершен, победа!") 
+                in_battle = False
+            else:
+                print("Следующий тур.")
+        pos = click_on_picture("img/loot.png")
+        time.sleep(2)
+
+def restart():
+    # Ищем кнопку Перезапустить
+    pos = click_on_picture("img/restart.png")
+    if pos:
+        time.sleep(3)
+        play_btn = find_image_on_screen("img/play.png")
+        while not play_btn:
+            print("Ждем кнопку 'Играть'...")
+            time.sleep(3)
+            play_btn = find_image_on_screen("img/play.png")
+    else:
+        print("Кнопка 'Перезапустить' не найдена.")
+
+def endless_play():
+    """
+    Запускает бесконечный цикл фарма:
+      1. Сохраняет текущее время.
+      2. Вызывает функцию play с параметром 15.
+      3. Ждёт до истечения 73 минут с момента старта, затем повторяет цикл.
+    """
+    import datetime
+
+    while True:
+        start_time = datetime.datetime.now()
+        play(15)
+        elapsed = (datetime.datetime.now() - start_time).total_seconds()
+        wait_time = 73 * 60 - elapsed
+        if wait_time > 0:
+            print(f"Ожидание {int(wait_time // 60)} мин {int(wait_time % 60)} сек до следующего запуска...")
+            time.sleep(wait_time)
 
 if __name__ == "__main__":
-    play(15)
-    # for i in range(6):
-    #     # Жмем кнопку призвать
-    #     pos = click_on_picture("img/summon.png")
-    #     time.sleep(3)
-        
-    #     # Бой
-    #     in_battle = True
-    #     while in_battle:
-    #         print("Начинаем бой")
-    #         attacker = select_hero(list_of_heroes())
-    #         print(f"Атакующий: {attacker}")
-    #         if not attacker:
-    #             print("Нет доступных героев для атаки")
-    #             break
-    #         if attacker:
-    #             pos = click_on_picture(f"img/{attacker.image}")
-    #             time.sleep(2)
-    #         else:
-    #             print('Шаблон атакующего не найден')
-    #             break
-    #         pos = battle(attacker)
-    #         if pos:
-    #             print("Бой завершен, победа!") 
-    #             in_battle = False
-    #         else:
-    #             print("Следующий тур.")
-    #     pos = click_on_picture("img/loot.png")
-    #     time.sleep(2)
+    n_attack_event = 0
+    n_attack_play = 15
+    endless = False
+
+    help_text = (
+        "Использование:\n"
+        "  python skazkabot.py /e:n /p:n [/endless]\n"
+        "  /e:n или /event:n   - количество атак для event (по умолчанию 0)\n"
+        "  /p:n или /play:n    - количество атак для play (по умолчанию 15)\n"
+        "  /endless            - бесконечный режим фарма (play каждые 73 минуты)\n"
+        "  /?                  - показать эту справку\n"
+        "Пример:\n"
+        "  python skazkabot.py /e:5 /p:20\n"
+        "  python skazkabot.py /endless"
+    )
+
+    for arg in sys.argv[1:]:
+        if arg.startswith("/e:") or arg.startswith("/event:"):
+            try:
+                n_attack_event = int(arg.split(":", 1)[1])
+            except ValueError:
+                print("Ошибка: неверный формат для /e:n или /event:n")
+                print(help_text)
+                sys.exit(1)
+        elif arg.startswith("/p:") or arg.startswith("/play:"):
+            try:
+                n_attack_play = int(arg.split(":", 1)[1])
+            except ValueError:
+                print("Ошибка: неверный формат для /p:n или /play:n")
+                print(help_text)
+                sys.exit(1)
+        elif arg == "/endless":
+            endless = True
+        elif arg == "/?":
+            print(help_text)
+            sys.exit(0)
+        else:
+            print(f"Неизвестный параметр: {arg}")
+            print(help_text)
+            sys.exit(1)
+
+    if endless:
+        endless_play()
+    else:
+        if n_attack_event > 0:
+            restart()
+            event(n_attack_event)
+        if n_attack_play > 0:
+            restart()
+            play(n_attack_play)
