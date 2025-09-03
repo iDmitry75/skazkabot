@@ -30,11 +30,12 @@ heroes = [
     Hero('Руслан', 'ruslan.png', 3, ('physical',)),
     Hero('Василиса', 'vasilisa.png', 2, ('physical','fire')),
     Hero('Яга', 'yaga.png', 2, ('fire',)),
-    Hero('Жар-птица', 'phoenix.png', 2, ('fire','physical')),
+    Hero('Жар-птица', 'phoenix.png', 3, ('fire','physical')),
     Hero('София', 'sofia.png', 4, ('water',)),
     Hero('Мухолов', 'flycatcher.png', 3, ('earth',)),
     Hero('Древень', 'dreven.png', 3, ('earth','physical')),
-    Hero('Ледогрыз', 'icecracker.png', 2, ('water',))
+    Hero('Ледогрыз', 'icecracker.png', 2, ('water',)),
+    Hero('Мракана', 'mrakana.png', 3, ('water',)),
 ]
 
 
@@ -270,7 +271,7 @@ def restart():
     else:
         print("Кнопка 'Перезапустить' не найдена.")
 
-def endless_play():
+def endless_play(n_attack=15):
     """
     Запускает бесконечный цикл фарма:
       1. Сохраняет текущее время.
@@ -282,7 +283,7 @@ def endless_play():
     while True:
         start_time = datetime.datetime.now()
         restart()
-        play(2)
+        play(n_attack)
         elapsed = (datetime.datetime.now() - start_time).total_seconds()
         wait_time = 73 * 60 - elapsed
         if wait_time > 0:
@@ -359,7 +360,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if endless:
-        endless_play()
+        endless_play(10)
     else:
         if n_attack_play > 0:
             restart()
