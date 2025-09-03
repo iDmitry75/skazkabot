@@ -170,7 +170,7 @@ def play(n_attack=10):
        time.sleep(1)
     for i in range(n_attack):    
         # Ищем босса для фарма
-        pos = click_on_picture("img/garvena.png")
+        pos = click_on_picture("img/bnosmile.png")
         time.sleep(2)
         if not pos:
             print('Босс не найден')
@@ -225,7 +225,7 @@ def event(n_attack=1):
     pos = click_on_picture("img/event.png")
     if pos:
        time.sleep(3)
-       pyautogui.moveTo(pos[0]-12, pos[1]-179)
+       pyautogui.moveTo(pos[0]-32, pos[1]+40)
        pyautogui.click()
        time.sleep(3)
     for i in range(n_attack):
@@ -260,12 +260,13 @@ def restart():
     # Ищем кнопку Перезапустить
     pos = click_on_picture("img/restart.png")
     if pos:
-        time.sleep(3)
+        time.sleep(5)
         play_btn = find_image_on_screen("img/play.png")
         while not play_btn:
             print("Ждем кнопку 'Играть'...")
             time.sleep(3)
             play_btn = find_image_on_screen("img/play.png")
+        print("Кнопка 'Играть' найдена, игра перезапущена.")
     else:
         print("Кнопка 'Перезапустить' не найдена.")
 
@@ -280,12 +281,40 @@ def endless_play():
 
     while True:
         start_time = datetime.datetime.now()
-        play(15)
+        restart()
+        play(2)
         elapsed = (datetime.datetime.now() - start_time).total_seconds()
         wait_time = 73 * 60 - elapsed
         if wait_time > 0:
-            print(f"Ожидание {int(wait_time // 60)} мин {int(wait_time % 60)} сек до следующего запуска...")
-            time.sleep(wait_time)
+            # Показываем обновляемый progress-bar до достижения 73 минут с момента start_time
+            total = 73 * 60
+            target_end = start_time + datetime.timedelta(seconds=total)
+            bar_width = 40
+            try:
+                while True:
+                    now = datetime.datetime.now()
+                    if now >= target_end:
+                        break
+                    passed = (now - start_time).total_seconds()
+                    if passed < 0:
+                        passed = 0
+                    if passed > total:
+                        passed = total
+                    remaining = int(total - passed)
+                    percent = passed / total if total > 0 else 1.0
+                    filled = int(percent * bar_width)
+                    bar = "#" * filled + "-" * (bar_width - filled)
+                    mins = remaining // 60
+                    secs = remaining % 60
+                    print(f"\rОжидание [{bar}] {int(percent*100):3d}%  {mins:02d}:{secs:02d} до следующего запуска", end="", flush=True)
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                # Позволяем пользователю прервать ожидание клавишей
+                print("\nОжидание прервано пользователем.")
+            else:
+                # Завершаем строку прогресс-бара после завершения ожидания
+                print()
+
 
 if __name__ == "__main__":
     n_attack_event = 0
@@ -332,9 +361,9 @@ if __name__ == "__main__":
     if endless:
         endless_play()
     else:
-        if n_attack_event > 0:
-            restart()
-            event(n_attack_event)
         if n_attack_play > 0:
             restart()
             play(n_attack_play)
+        if n_attack_event > 0:
+            restart()
+            event(n_attack_event)
