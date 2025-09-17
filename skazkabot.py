@@ -32,9 +32,11 @@ import pyautogui
 import time
 import sys
 
+stRegular = 0
+stWeighted = 1
 
 class Hero:
-    def __init__(self, name, image, priority, element=None):
+    def __init__(self, name, image, priority, element=None, strategy=stRegular):
         self.name = name
         self.image = image
         self.priority = priority
@@ -45,17 +47,18 @@ class Hero:
             self.element = element
         else:
             self.element = (element,)
+        self.strategy = strategy
 
     def __repr__(self):
-        return f"Hero(name={self.name}, image={self.image}, priority={self.priority}, element={self.element})"
+        return f"Hero(name={self.name}, image={self.image}, priority={self.priority}, element={self.element}, strategy={self.strategy})"
 
 heroes = [
-    Hero('Горыныч', 'gor.png', 1, ('fire','physical')),
+    Hero('Горыныч', 'gor.png', 1, ('fire','physical'), strategy=stWeighted),
     Hero('Котофей', 'kotofei.png', 2, ('earth','physical')),
     Hero('Святогор', 'svyat.png', 1, ('water','physical')),
     Hero('Несмеяна', 'nosmile.png', 1, ('water','physical')),
     Hero('Руслан', 'ruslan.png', 3, ('physical',)),
-    Hero('Василиса', 'vasilisa.png', 2, ('physical','fire')),
+    Hero('Василиса', 'vasilisa.png', 2, ('physical','fire'), strategy=stWeighted),
     Hero('Яга', 'yaga.png', 2, ('fire',)),
     Hero('Жар-птица', 'phoenix.png', 3, ('fire','physical')),
     Hero('София', 'sofia.png', 4, ('water',)),
@@ -143,25 +146,76 @@ def press():
 
 
 def battle(attacker):
+    # Для stWeighted: запоминаем сколько рун выбрано по каждому типу
+    weighted_selected = {elem: 0 for elem in attacker.element}
     for round in range(3):
         print(f"Раунд {round + 1}")
         press()
         if round != 3:
-            # Ищем руны для всех элементов героя
-            found_any = False
+            # Подсчитываем руны для каждого элемента героя
+            element_runes = {}
             for elem in attacker.element:
                 runes = find_runes(f"img/{elem}.png")
+                element_runes[elem] = runes
                 print(f"Найдено {len(runes)} рун(ы) {elem}: {runes}")
-                if runes:
-                    found_any = True
-                    for rune in runes:
-                        pyautogui.moveTo(rune[0], rune[1])
-                        pyautogui.click()
-                        time.sleep(1)
+            if attacker.strategy == stRegular:
+                found_any = False
+                for elem, runes in element_runes.items():
+                    if runes:
+                        found_any = True
+                        for rune in runes:
+                            pyautogui.moveTo(rune[0], rune[1])
+                            pyautogui.click()
+                            time.sleep(1)
+                    if round == 0:
+                        break
+                if not found_any:
+                    print(f'Руны {attacker.element} не найдены')
+            elif attacker.strategy == stWeighted:
+                # stWeighted: особый алгоритм по раундам
+                elems = list(attacker.element)
                 if round == 0:
-                    break
-            if not found_any:
-                print(f'Руны {attacker.element} не найдены')
+                    # В первом раунде — не больше 2 рун каждого типа
+                    for elem in elems:
+                        runes = element_runes[elem]
+                        count = min(2, len(runes))
+                        for rune in runes[:count]:
+                            pyautogui.moveTo(rune[0], rune[1])
+                            pyautogui.click()
+                            time.sleep(1)
+                        weighted_selected[elem] += count
+                        print(f"Выбрано {count} рун типа {elem} в первом раунде")
+                elif round == 1:
+                    # Во втором раунде — не больше 3 рун первого типа и 2 второго, учитывая уже выбранные
+                    if len(elems) > 0:
+                        elem1 = elems[0]
+                        max1 = 3 - weighted_selected[elem1]
+                        runes1 = element_runes[elem1]
+                        count1 = min(max1, len(runes1)) if max1 > 0 else 0
+                        for rune in runes1[:count1]:
+                            pyautogui.moveTo(rune[0], rune[1])
+                            pyautogui.click()
+                            time.sleep(1)
+                        weighted_selected[elem1] += count1
+                        print(f"Выбрано {count1} рун типа {elem1} во втором раунде")
+                    if len(elems) > 1:
+                        elem2 = elems[1]
+                        max2 = 2 - weighted_selected[elem2]
+                        runes2 = element_runes[elem2]
+                        count2 = min(max2, len(runes2)) if max2 > 0 else 0
+                        for rune in runes2[:count2]:
+                            pyautogui.moveTo(rune[0], rune[1])
+                            pyautogui.click()
+                            time.sleep(1)
+                        weighted_selected[elem2] += count2
+                        print(f"Выбрано {count2} рун типа {elem2} во втором раунде")
+                else:
+                    # В третьем раунде — прежний алгоритм (кликаем по всем)
+                    for elem, runes in element_runes.items():
+                        for rune in runes:
+                            pyautogui.moveTo(rune[0], rune[1])
+                            pyautogui.click()
+                            time.sleep(1)
     time.sleep(10)
     # Проверяем победу
     pos = find_image_on_screen("img/victory.png")
@@ -387,7 +441,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if endless:
-        endless_play(10)
+        endless_play(17)
     else:
         if n_attack_play > 0:
             restart()
