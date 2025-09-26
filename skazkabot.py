@@ -283,7 +283,15 @@ def play(n_attack=10):
             else:
                 print("Следующий тур.")
         pos = click_on_picture("img/loot.png")
-        time.sleep(2)
+        if pos:
+            time.sleep(2)
+        else:
+            print("Кнопка 'Забрать' не найдена, вероятно ничья или проигрыш.")
+            pos = click_on_picture("img/repeat.png")
+            if pos:
+                time.sleep(2)
+                print("Проиграли бой. Нажал кнопку Повторить.")
+
 
 def event(n_attack=1):
     """
@@ -419,6 +427,7 @@ if __name__ == "__main__":
         if arg.startswith("/e:") or arg.startswith("/event:"):
             try:
                 n_attack_event = int(arg.split(":", 1)[1])
+                print(f"Установлено количество атак для event: {n_attack_event}")
             except ValueError:
                 print("Ошибка: неверный формат для /e:n или /event:n")
                 print(help_text)
@@ -426,6 +435,7 @@ if __name__ == "__main__":
         elif arg.startswith("/p:") or arg.startswith("/play:"):
             try:
                 n_attack_play = int(arg.split(":", 1)[1])
+                print(f"Установлено количество атак для play: {n_attack_play}")
             except ValueError:
                 print("Ошибка: неверный формат для /p:n или /play:n")
                 print(help_text)
