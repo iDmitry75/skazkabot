@@ -69,7 +69,7 @@ heroes = [
 ]
 
 
-def find_image_on_screen(template_path, threshold=0.8):
+def find_image_on_screen(template_path, threshold=0.79):
     screenshot = pyautogui.screenshot()
     screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
     template = cv2.imread(template_path)
@@ -133,14 +133,16 @@ def click_on_picture(image_path):
         pyautogui.moveTo(pos[0], pos[1])
         pyautogui.click()
     else:
-        print("Изображение не найдено.")
+        print(f'Изображение {image_path} не найдено.')
     return pos
 
 def press():
     pos = click_on_picture("img/press.png")
     if not pos:
-        print("Кнопка 'Press' не найдена.")
+        print("Кнопка 'Жми' не найдена.")
         pos = click_on_picture("img/ataka.png")
+        if not pos:
+            print("Кнопка 'Атака' не найдена.")
     time.sleep(4)
     return(pos)
 
@@ -250,7 +252,8 @@ def play(n_attack=10):
        pyautogui.moveTo(pos[0]-131, pos[1]+10)
        pyautogui.click()
        time.sleep(1)
-    for i in range(n_attack):    
+    for i in range(n_attack): # Цикл по количеству атак
+        print(f"Атака {i + 1} из {n_attack}")   
         # Ищем босса для фарма
         pos = click_on_picture("img/bnosmile.png")
         time.sleep(2)
